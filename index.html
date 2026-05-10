@@ -1,0 +1,392 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Lam Richter Report Generator</title>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+body{font-family:'Segoe UI',system-ui,sans-serif;background:#eef0f5;color:#2c2c2c;height:100vh;overflow:hidden;display:flex;flex-direction:column;}
+
+/* TOP BAR */
+.topbar{background:linear-gradient(90deg,#00468C,#0b5cb8);color:#fff;padding:13px 24px;display:flex;align-items:center;gap:14px;box-shadow:0 2px 10px rgba(0,0,0,.22);flex-shrink:0;z-index:10;}
+.topbar-logo{width:36px;height:36px;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+.topbar-logo img{width:36px;height:36px;display:block;}
+.topbar h1{font-size:17px;font-weight:700;letter-spacing:.3px;}
+.topbar-actions{margin-left:auto;}
+.btn-export-top{background:rgba(255,255,255,.18);color:#fff;padding:8px 16px;border-radius:7px;border:1.5px solid rgba(255,255,255,.45);font-size:13px;font-weight:700;cursor:pointer;display:inline-flex;align-items:center;gap:6px;font-family:inherit;transition:all .18s;}
+.btn-export-top:hover{background:rgba(255,255,255,.28);transform:translateY(-1px);}
+
+/* MAIN */
+.main{display:flex;flex:1;overflow:hidden;}
+
+/* EDITOR */
+.editor-panel{width:360px;flex-shrink:0;background:#fff;border-right:1px solid #dde0e8;overflow-y:auto;padding:18px 16px 28px;display:flex;flex-direction:column;gap:14px;}
+.editor-panel::-webkit-scrollbar{width:5px;}
+.editor-panel::-webkit-scrollbar-track{background:#f0f2f5;}
+.editor-panel::-webkit-scrollbar-thumb{background:#c5cad6;border-radius:10px;}
+.editor-section{background:#f7f9fc;border-radius:10px;padding:14px;border:1px solid #e4e8f0;}
+.editor-section-title{font-size:10.5px;font-weight:700;text-transform:uppercase;letter-spacing:.9px;color:#00468C;margin-bottom:12px;display:flex;align-items:center;gap:7px;}
+.editor-section-title::before{content:'';display:block;width:3px;height:13px;background:#00468C;border-radius:2px;}
+.field-group{display:flex;flex-direction:column;gap:5px;margin-bottom:9px;}
+.field-group:last-child{margin-bottom:0;}
+.field-label{font-size:11.5px;font-weight:600;color:#5a6072;}
+.field-input,.field-textarea{width:100%;padding:7px 10px;border:1.5px solid #d2d7e3;border-radius:6px;font-size:13px;font-family:inherit;background:#fff;color:#1a1a2e;transition:border-color .18s,box-shadow .18s;outline:none;}
+.field-input:focus,.field-textarea:focus{border-color:#00468C;box-shadow:0 0 0 3px rgba(0,70,140,.1);}
+.field-textarea{min-height:78px;resize:vertical;line-height:1.5;}
+.dyn-card{background:#fff;border:1.5px solid #dde2ed;border-radius:8px;padding:11px;margin-bottom:10px;position:relative;}
+.dyn-card:last-of-type{margin-bottom:0;}
+.dyn-card-num{font-size:10px;font-weight:700;color:#8a93a6;text-transform:uppercase;letter-spacing:.7px;margin-bottom:8px;}
+.remove-btn{position:absolute;top:9px;right:9px;background:none;border:none;cursor:pointer;color:#bcc2cf;font-size:15px;line-height:1;padding:2px 5px;border-radius:4px;transition:color .18s,background .18s;}
+.remove-btn:hover{color:#e53935;background:#ffeaea;}
+.btn-add{background:#e8edf8;color:#00468C;width:100%;justify-content:center;border:1.5px dashed #b0c0dc;padding:8px 16px;border-radius:7px;font-size:13px;font-weight:600;cursor:pointer;display:flex;align-items:center;gap:6px;font-family:inherit;transition:all .18s;margin-top:10px;}
+.btn-add:hover{background:#dce6f5;border-color:#00468C;transform:translateY(-1px);}
+.btn-export-panel{background:linear-gradient(135deg,#00468C,#0b5cb8);color:#fff;padding:10px 20px;font-size:13px;font-weight:700;border-radius:8px;box-shadow:0 4px 14px rgba(0,70,140,.3);justify-content:center;width:100%;border:none;cursor:pointer;display:flex;align-items:center;gap:6px;font-family:inherit;transition:all .18s;}
+.btn-export-panel:hover{background:linear-gradient(135deg,#003870,#0a4e9e);box-shadow:0 6px 18px rgba(0,70,140,.4);transform:translateY(-1px);}
+.export-wrap{margin-top:auto;padding-top:14px;border-top:1px solid #e4e8f0;}
+
+/* PREVIEW */
+.preview-panel{flex:1;background:#d8dce5;overflow-y:auto;padding:28px 22px 40px;display:flex;justify-content:center;}
+.preview-panel::-webkit-scrollbar{width:6px;}
+.preview-panel::-webkit-scrollbar-track{background:#d0d4dc;}
+.preview-panel::-webkit-scrollbar-thumb{background:#a8b0c0;border-radius:10px;}
+.preview-wrapper{width:100%;max-width:720px;}
+.preview-label{font-size:10.5px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:#8a93a8;text-align:center;margin-bottom:10px;}
+
+/* REPORT DOCUMENT — matches Word doc styling exactly */
+.report-document{
+  background:#fff;
+  padding:56px 64px 64px;
+  box-shadow:0 4px 28px rgba(0,0,0,.14),0 1px 5px rgba(0,0,0,.08);
+  font-family:Calibri,'Calibri',Arial,sans-serif;
+  min-height:1056px;
+  font-size:11pt;
+  color:#000;
+  line-height:1.6;
+}
+
+/* Header — 2-col table: logo left, Kabir N right */
+.report-header{
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  padding-bottom:10px;
+  border-bottom:1px solid #ccc;
+  margin-bottom:32px;
+}
+.report-header-logo{width:38px;height:37px;display:block;}
+.report-header-kabir{
+  font-family:Calibri,sans-serif;
+  font-size:10pt;
+  color:#333;
+  text-align:right;
+}
+
+/* Title — centered, 19pt, bold, #00468C */
+.report-title{
+  font-size:19pt;
+  font-weight:700;
+  color:#00468C;
+  font-family:Calibri,sans-serif;
+  text-align:center;
+  line-height:1.25;
+  margin-bottom:28px;
+  white-space:pre-line;
+}
+
+/* Meta block — plain text, no box */
+.report-meta{
+  margin-bottom:22pt;
+  font-family:Calibri,sans-serif;
+  font-size:11pt;
+  line-height:1.65;
+  color:#000;
+}
+.report-meta-line{display:block;}
+.report-meta-italic{display:block;font-style:italic;}
+
+/* Section heading — bold 14pt, no underline */
+.report-section-title{
+  font-size:14pt;
+  font-weight:700;
+  color:#000;
+  font-family:Calibri,sans-serif;
+  margin-top:14pt;
+  margin-bottom:5pt;
+}
+
+/* Section body — 11pt Calibri */
+.report-section-body{
+  font-size:11pt;
+  font-family:Calibri,sans-serif;
+  color:#000;
+  line-height:1.65;
+  margin-bottom:0;
+  white-space:pre-wrap;
+  word-break:break-word;
+}
+
+/* Signature */
+.report-signature{
+  margin-top:28pt;
+  font-family:Calibri,sans-serif;
+  font-size:11pt;
+  line-height:1.75;
+  color:#000;
+}
+.sig-closing{display:block;margin-bottom:14pt;font-style:normal;}
+.sig-name{display:block;font-weight:400;}
+.sig-role{display:block;font-style:italic;}
+.sig-company{display:block;font-style:italic;}
+.sig-email{display:block;font-weight:700;}
+
+/* PRINT */
+@media print{
+  *{-webkit-print-color-adjust:exact!important;print-color-adjust:exact!important;}
+  html,body{height:auto;overflow:visible;background:#fff!important;display:block;}
+  .topbar,.editor-panel,.preview-label{display:none!important;}
+  .main{display:block;overflow:visible;}
+  .preview-panel{background:#fff!important;padding:0!important;overflow:visible;display:block;}
+  .preview-wrapper{max-width:100%;}
+
+  /* In-document header is hidden — @page margin boxes handle logo + page numbers */
+  .report-header{display:none!important;}
+
+  .report-document{
+    box-shadow:none!important;
+    padding:0!important;
+    margin:0!important;
+    min-height:auto!important;
+  }
+
+  .report-section-title,.report-section-body,.report-meta,.report-signature{page-break-inside:avoid;}
+  @page{size:A4;margin:1.8cm 2.2cm 2cm 2.2cm;@top-left{content:url("data:image/png;base64,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");vertical-align:bottom;padding-bottom:3pt;}@top-center{content:"";}@top-right{content:"Kabir " counter(page);font-family:Calibri,sans-serif;font-size:10pt;color:#333;vertical-align:bottom;padding-bottom:5pt;}@bottom-left{content:"";}@bottom-center{content:"";}@bottom-right{content:"";}}
+}
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <div class="topbar-logo"><img src="data:image/png;base64,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" style="width:36px;height:36px;display:block;" alt="LR"></div>
+  <h1>Lam Richter Report Generator</h1>
+  <div class="topbar-actions">
+    <button class="btn-export-top" onclick="exportPDF()">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7,10 12,15 17,10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+      Export PDF
+    </button>
+  </div>
+</div>
+
+<div class="main">
+
+  <div class="editor-panel" id="editorPanel">
+    <div class="editor-section">
+      <div class="editor-section-title">Report Info</div>
+      <div class="field-group">
+        <label class="field-label">Report Title <span style="font-weight:400;color:#8a93a6;font-size:10.5px;">(use Enter for a new line)</span></label>
+        <textarea class="field-textarea" id="reportTitle" oninput="updatePreview()" placeholder="Enter report title..." style="min-height:54px;resize:vertical;">Professional Report</textarea>
+      </div>
+    </div>
+    <div class="editor-section">
+      <div class="editor-section-title">Author Details</div>
+      <div class="field-group">
+        <label class="field-label">Prepared By</label>
+        <input type="text" class="field-input" id="preparedBy" value="Tawhid Kabir" oninput="updatePreview()" placeholder="Full name...">
+      </div>
+      <div class="field-group">
+        <label class="field-label">Role / Position</label>
+        <input type="text" class="field-input" id="rolePosition" value="Director of Full Stack Development" oninput="updatePreview()" placeholder="Job title...">
+      </div>
+      <div class="field-group">
+        <label class="field-label">Company</label>
+        <input type="text" class="field-input" id="company" value="Lam Richter Corporation" oninput="updatePreview()" placeholder="Company name...">
+      </div>
+      <div class="field-group">
+        <label class="field-label">Email</label>
+        <input type="email" class="field-input" id="email" value="tawhid.kabir@lamrichter.com" oninput="updatePreview()" placeholder="email@company.com">
+      </div>
+    </div>
+    <div class="editor-section">
+      <div class="editor-section-title">Report Sections</div>
+      <div id="sectionsContainer"></div>
+      <button class="btn-add" onclick="addSection()">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+        Add Section
+      </button>
+    </div>
+    <div class="export-wrap">
+      <button class="btn-export-panel" onclick="exportPDF()">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7,10 12,15 17,10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+        Export as PDF
+      </button>
+    </div>
+  </div>
+
+  <div class="preview-panel">
+    <div class="preview-wrapper">
+      <div class="preview-label">&#9679; Live Preview</div>
+      <div class="report-document" id="reportDocument">
+
+        <div class="report-header">
+          <img class="report-header-logo" src="data:image/png;base64,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" alt="LR">
+          <div class="report-header-kabir" id="reportPageId">Kabir 1</div>
+        </div>
+
+        <div class="report-title" id="previewTitle">Professional Report</div>
+
+        <div class="report-meta">
+          <span class="report-meta-line">Prepared By: <span id="pvPreparedBy">Tawhid Kabir</span></span>
+          <span class="report-meta-italic" id="pvRoleCompany">Director of Full Stack Development, Lam Richter Corporation</span>
+          <span class="report-meta-line">Date: <span id="pvDate"></span></span>
+        </div>
+
+        <div id="previewSections"></div>
+
+        <div class="report-signature">
+          <span class="sig-closing">Submitted respectfully,</span>
+          <span class="sig-name" id="sigName">Tawhid Kabir</span>
+          <span class="sig-role" id="sigRole">Director of Full Stack Development</span>
+          <span class="sig-company" id="sigCompany">Lam Richter Corporation</span>
+          <span class="sig-email" id="sigEmail">tawhid.kabir@lamrichter.com</span>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<script>
+(function(){
+  var sections=[];
+  var nextId=1;
+
+  function val(id){var el=document.getElementById(id);return el?el.value:'';}
+
+  function getCurrentDate(){
+    var d=new Date();
+    var mo=['January','February','March','April','May','June','July','August','September','October','November','December'];
+    return mo[d.getMonth()]+' '+d.getDate()+', '+d.getFullYear();
+  }
+
+  function addSection(title,body){
+    title=title||'';body=body||'';
+    var id=nextId++;
+    sections.push({id:id,title:title,body:body});
+    var container=document.getElementById('sectionsContainer');
+
+    var card=document.createElement('div');
+    card.className='dyn-card';card.id='sec-card-'+id;
+
+    var num=document.createElement('div');
+    num.className='dyn-card-num';num.textContent='Section '+sections.length;
+    card.appendChild(num);
+
+    var rb=document.createElement('button');
+    rb.className='remove-btn';rb.title='Remove';rb.innerHTML='&#x2715;';
+    (function(sid){rb.addEventListener('click',function(){removeSection(sid);});})(id);
+    card.appendChild(rb);
+
+    var tg=document.createElement('div');tg.className='field-group';tg.style.paddingRight='28px';
+    var tl=document.createElement('label');tl.className='field-label';tl.textContent='Section Title';
+    var ti=document.createElement('input');ti.type='text';ti.className='field-input';ti.id='sec-t-'+id;
+    ti.value=title;ti.placeholder='Section heading...';
+    (function(sid){ti.addEventListener('input',function(){syncSection(sid);});})(id);
+    tg.appendChild(tl);tg.appendChild(ti);card.appendChild(tg);
+
+    var bg=document.createElement('div');bg.className='field-group';
+    var bl=document.createElement('label');bl.className='field-label';bl.textContent='Section Body';
+    var bi=document.createElement('textarea');bi.className='field-textarea';bi.id='sec-b-'+id;
+    bi.value=body;bi.placeholder='Write section content here...';
+    (function(sid){bi.addEventListener('input',function(){syncSection(sid);});})(id);
+    bg.appendChild(bl);bg.appendChild(bi);card.appendChild(bg);
+
+    container.appendChild(card);
+    renumberCards();updatePreview();
+  }
+
+  function removeSection(id){
+    var idx=-1;
+    for(var i=0;i<sections.length;i++){if(sections[i].id===id){idx=i;break;}}
+    if(idx!==-1)sections.splice(idx,1);
+    var card=document.getElementById('sec-card-'+id);
+    if(card&&card.parentNode)card.parentNode.removeChild(card);
+    renumberCards();updatePreview();
+  }
+
+  function syncSection(id){
+    var s=null;
+    for(var i=0;i<sections.length;i++){if(sections[i].id===id){s=sections[i];break;}}
+    if(!s)return;
+    var ti=document.getElementById('sec-t-'+id);
+    var bi=document.getElementById('sec-b-'+id);
+    if(ti)s.title=ti.value;if(bi)s.body=bi.value;
+    updatePreview();
+  }
+
+  function renumberCards(){
+    var cards=document.querySelectorAll('.dyn-card');
+    for(var i=0;i<cards.length;i++){
+      var n=cards[i].querySelector('.dyn-card-num');
+      if(n)n.textContent='Section '+(i+1);
+    }
+  }
+
+  function updatePreview(){
+    var title=val('reportTitle');
+    var preparedBy=val('preparedBy');
+    var role=val('rolePosition');
+    var company=val('company');
+    var email=val('email');
+
+    document.getElementById('previewTitle').textContent=title||'Report Title';
+    document.getElementById('pvPreparedBy').textContent=preparedBy||'--';
+    var roleCompany=[role,company].filter(Boolean).join(', ');
+    document.getElementById('pvRoleCompany').textContent=roleCompany||'--';
+    document.getElementById('sigName').textContent=preparedBy||'--';
+    document.getElementById('sigRole').textContent=role||'--';
+    document.getElementById('sigCompany').textContent=company||'--';
+    document.getElementById('sigEmail').textContent=email||'--';
+
+    var pvSec=document.getElementById('previewSections');
+    pvSec.innerHTML='';
+    for(var i=0;i<sections.length;i++){
+      var s=sections[i];
+      var h=document.createElement('div');
+      h.className='report-section-title';
+      h.textContent=s.title||'Untitled Section';
+      var b=document.createElement('div');
+      b.className='report-section-body';
+      b.textContent=s.body||'';
+      pvSec.appendChild(h);pvSec.appendChild(b);
+    }
+  }
+
+  window.addSection=addSection;
+  window.updatePreview=updatePreview;
+
+  window.exportPDF=function(){
+    var title=val('reportTitle')||'Report';
+    var slug=title.trim().replace(/[^\w\s-]/g,'').replace(/\s+/g,'_')||'Report';
+    var prev=document.title;
+    document.title=slug;
+    window.print();
+    setTimeout(function(){document.title=prev;},2500);
+  };
+
+  document.getElementById('pvDate').textContent=getCurrentDate();
+
+  addSection('Overview','The Raspberry Pi 4 is a compact single-board computer developed by the Raspberry Pi Foundation. It is commonly used for education, networking, lightweight server hosting, automation systems, and software development projects.');
+  addSection('Hardware Specifications','The Raspberry Pi 4 includes a Broadcom BCM2711 quad-core Cortex-A72 64-bit processor running at 1.5 GHz. It supports dual micro-HDMI outputs with 4K video capability, USB 3.0 connectivity, Gigabit Ethernet, dual-band Wi-Fi, Bluetooth 5.0, and GPIO expansion pins. The Raspberry Pi 4 is officially sold in 2GB, 4GB, and 8GB RAM configurations.');
+  addSection('Performance and Server Usage','The Raspberry Pi 4 is capable of running lightweight production services including web servers, file storage systems, VPN services, automation software, development environments, and media servers. When paired with external SSD or HDD storage and proper cooling, the device can maintain stable long-term uptime.');
+  addSection('Networking and Connectivity','Gigabit Ethernet and USB 3.0 support significantly improve network and storage performance compared to earlier Raspberry Pi generations. These features make the device suitable for low-power infrastructure deployments and local network services.');
+  addSection('Advantages','Key advantages of the Raspberry Pi 4 include low power consumption, affordability, compact size, Linux compatibility, flexible hardware interfacing, and strong community support. The platform remains highly adaptable for both educational and professional applications.');
+  addSection('Conclusion','The Raspberry Pi 4 remains one of the most versatile and widely adopted single-board computers available today. Its balance of performance, efficiency, and expandability allows it to support a wide variety of technical and infrastructure-related use cases.');
+
+  updatePreview();
+})();
+</script>
+</body>
+</html>
+
+
