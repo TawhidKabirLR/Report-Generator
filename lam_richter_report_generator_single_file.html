@@ -1,0 +1,391 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Lam Richter Report Generator</title>
+  <style>
+    body {
+      margin: 0;
+      background: #f3f4f6;
+      font-family: Calibri, sans-serif;
+      padding: 40px;
+      color: #111827;
+    }
+
+    .container {
+      max-width: 1400px;
+      margin: auto;
+      display: grid;
+      grid-template-columns: 420px 1fr;
+      gap: 30px;
+    }
+
+    .panel,
+    .preview {
+      background: white;
+      border-radius: 18px;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.08);
+      overflow: hidden;
+    }
+
+    .panel {
+      padding: 24px;
+      position: sticky;
+      top: 20px;
+      height: fit-content;
+    }
+
+    h1 {
+      margin-top: 0;
+      font-size: 28px;
+    }
+
+    .subtitle {
+      color: #6b7280;
+      margin-bottom: 25px;
+    }
+
+    label {
+      display: block;
+      font-weight: 700;
+      margin-top: 18px;
+      margin-bottom: 8px;
+    }
+
+    input,
+    textarea {
+      width: 100%;
+      box-sizing: border-box;
+      padding: 12px;
+      border-radius: 10px;
+      border: 1px solid #d1d5db;
+      font-family: Calibri, sans-serif;
+      font-size: 15px;
+    }
+
+    textarea {
+      min-height: 140px;
+      resize: vertical;
+    }
+
+    button {
+      width: 100%;
+      margin-top: 24px;
+      padding: 14px;
+      border: none;
+      border-radius: 12px;
+      background: #0b4ea2;
+      color: white;
+      font-size: 16px;
+      font-weight: 700;
+      cursor: pointer;
+      transition: 0.2s;
+    }
+
+    button:hover {
+      opacity: 0.92;
+    }
+
+    .report-page {
+      width: 816px;
+      min-height: 1056px;
+      margin: 30px auto;
+      background: white;
+      position: relative;
+      box-shadow: 0 10px 25px rgba(0,0,0,0.08);
+      padding: 70px;
+      box-sizing: border-box;
+    }
+
+    .header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 50px;
+    }
+
+    .logo {
+      width: 52px;
+      height: 52px;
+      background: #0b4ea2;
+      color: white;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 28px;
+      font-style: italic;
+      font-weight: 700;
+      font-family: Georgia, serif;
+    }
+
+    .page-number {
+      font-size: 11pt;
+    }
+
+    .report-title {
+      text-align: center;
+      font-size: 19pt;
+      font-weight: 700;
+      color: #0b4ea2;
+      margin-bottom: 40px;
+      line-height: 1.4;
+    }
+
+    .section-title {
+      font-size: 14pt;
+      font-weight: 700;
+      margin-top: 28px;
+      margin-bottom: 12px;
+    }
+
+    .body-text {
+      font-size: 11pt;
+      line-height: 1.6;
+      white-space: pre-wrap;
+    }
+
+    .signature {
+      margin-top: 60px;
+      font-size: 11pt;
+      line-height: 1.6;
+    }
+
+    .signature .role {
+      font-style: italic;
+    }
+
+    .signature .email {
+      font-weight: 700;
+    }
+
+    .tips {
+      margin-top: 20px;
+      background: #eff6ff;
+      border: 1px solid #bfdbfe;
+      border-radius: 12px;
+      padding: 14px;
+      font-size: 14px;
+      color: #1e3a8a;
+      line-height: 1.5;
+    }
+
+    @media print {
+      body {
+        background: white;
+        padding: 0;
+      }
+
+      .panel {
+        display: none;
+      }
+
+      .container {
+        display: block;
+      }
+
+      .preview {
+        box-shadow: none;
+      }
+
+      .report-page {
+        box-shadow: none;
+        margin: 0;
+        width: 100%;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="panel">
+      <h1>Lam Richter Report Generator</h1>
+      <div class="subtitle">
+        Generate official Lam Richter styled reports instantly.
+      </div>
+
+      <label>Prepared By</label>
+      <input id="preparedBy" oninput="updateReport()" value="Tawhid Kabir" />
+
+      <label>Role / Position</label>
+      <input id="roleInput" oninput="updateReport()" value="Director of Full Stack Development" />
+
+      <label>Company</label>
+      <input id="companyInput" oninput="updateReport()" value="Lam Richter Corporation" />
+
+      <label>Email</label>
+      <input id="emailInput" oninput="updateReport()" value="tawhid.kabir@lamrichter.com" />
+
+      <label>Report Title</label>
+      <input id="titleInput" oninput="updateReport()" value="Raspberry Pi 4
+Official Technical Report" />
+
+      <label>Section 1 Title</label>
+      <input id="s1Title" value="Overview" />
+
+      <label>Section 1 Content</label>
+      <textarea id="s1Body">The Raspberry Pi 4 is a compact single-board computer designed for education, development, networking, and infrastructure applications.</textarea>
+
+      <label>Section 2 Title</label>
+      <input id="s2Title" value="Hardware Specifications" />
+
+      <label>Section 2 Content</label>
+      <textarea id="s2Body">The Raspberry Pi 4 includes USB 3.0 support, Gigabit Ethernet, dual-band Wi‑Fi, Bluetooth 5.0, and up to 8GB of RAM.</textarea>
+
+      <div id="sectionsContainer"></div>
+
+      <button onclick="addSection()">Add Section</button>
+      <button onclick="updateReport()">Update Report</button>
+      <button onclick="downloadReport()">Export Report</button>
+
+      <div class="tips">
+        <strong>How to use:</strong><br>
+        1. Upload this file to GitHub Pages or open locally.<br>
+        2. Replace the text with your report content.<br>
+        3. Click <strong>Add Section</strong> whenever you need more report sections.<br>
+        4. Click <strong>Print / Save as PDF</strong>.<br>
+        5. Save as PDF for a clean Lam Richter formatted report.
+      </div>
+    </div>
+
+    <div class="preview">
+      <div class="report-page">
+        <div class="header">
+          <div class="logo">LR</div>
+          <div class="page-number">Kabir 1</div>
+        </div>
+
+        <div style="margin-bottom: 35px; font-size: 11pt; line-height: 1.6;">
+          <div>Prepared By: <span id="preparedByPreview">Tawhid Kabir</span></div>
+          <div><span id="rolePreview">Director of Full Stack Development</span>, <span id="companyPreviewTop">Lam Richter Corporation</span></div>
+          <div>Date: <span id="currentDate"></span></div>
+        </div>
+
+        <div class="report-title" id="reportTitle">
+          Raspberry Pi 4<br>
+          Official Technical Report
+        </div>
+
+        <div id="reportSections"></div>
+
+        <div class="signature">
+          <span id="signatureName">Tawhid Kabir</span><br>
+          <span class="role">
+            <span id="signatureRole">Director of Full Stack Development</span><br>
+            <span id="signatureCompany">Lam Richter Corporation</span>
+          </span><br>
+          <span class="email" id="signatureEmail">tawhid.kabir@lamrichter.com</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    let sectionCount = 0;
+
+    function addSection(title = '', body = '') {
+      sectionCount++;
+
+      const container = document.getElementById('sectionsContainer');
+
+      const wrapper = document.createElement('div');
+      wrapper.style.marginBottom = '20px';
+
+      wrapper.innerHTML = `
+        <label>Section ${sectionCount} Title</label>
+        <input type="text" id="s${sectionCount}Title" value="${title}">
+
+        <label>Section ${sectionCount} Content</label>
+        <textarea id="s${sectionCount}Body">${body}</textarea>
+      `;
+
+      container.appendChild(wrapper);
+
+      document.getElementById(`s${sectionCount}Title`).addEventListener('input', updateReport);
+      document.getElementById(`s${sectionCount}Body`).addEventListener('input', updateReport);
+
+      updateReport();
+    }
+
+    function updateReport() {
+      const preparedBy = document.getElementById('preparedBy').value;
+      const role = document.getElementById('roleInput').value;
+      const company = document.getElementById('companyInput').value;
+      const email = document.getElementById('emailInput').value;
+      const title = document.getElementById('titleInput').value;
+
+      document.getElementById('preparedByPreview').textContent = preparedBy;
+      document.getElementById('rolePreview').textContent = role;
+      document.getElementById('companyPreviewTop').textContent = company;
+
+      document.getElementById('signatureName').textContent = preparedBy;
+      document.getElementById('signatureRole').textContent = role;
+      document.getElementById('signatureCompany').textContent = company;
+      document.getElementById('signatureEmail').textContent = email;
+
+      document.getElementById('reportTitle').innerHTML = title.replace(/
+/g, '<br>');
+
+      const reportSections = document.getElementById('reportSections');
+      reportSections.innerHTML = '';
+
+      for (let i = 1; i <= sectionCount; i++) {
+        const sectionTitle = document.getElementById(`s${i}Title`).value;
+        const sectionBody = document.getElementById(`s${i}Body`).value;
+
+        const titleDiv = document.createElement('div');
+        titleDiv.className = 'section-title';
+        titleDiv.textContent = sectionTitle;
+
+        const bodyDiv = document.createElement('div');
+        bodyDiv.className = 'body-text';
+        bodyDiv.textContent = sectionBody;
+
+        reportSections.appendChild(titleDiv);
+        reportSections.appendChild(bodyDiv);
+      }
+    }
+
+    function downloadReport() {
+      const title = document.getElementById('titleInput').value
+        .split('
+')[0]
+        .trim()
+        .replace(/[^a-zA-Z0-9]/g, '_');
+
+      document.title = title || 'Lam_Richter_Report';
+      window.print();
+    }
+
+    function setCurrentDate() {
+      const options = { year: 'numeric', month: 'long', day: 'numeric' };
+      document.getElementById('currentDate').textContent = new Date().toLocaleDateString('en-US', options);
+    }
+
+    document.getElementById('preparedBy').addEventListener('input', updateReport);
+    document.getElementById('roleInput').addEventListener('input', updateReport);
+    document.getElementById('companyInput').addEventListener('input', updateReport);
+    document.getElementById('emailInput').addEventListener('input', updateReport);
+    document.getElementById('titleInput').addEventListener('input', updateReport);
+
+    setCurrentDate();
+
+    addSection(
+      'Overview',
+      'The Raspberry Pi 4 is a compact single-board computer designed for education, development, networking, and infrastructure applications.'
+    );
+
+    addSection(
+      'Hardware Specifications',
+      'The Raspberry Pi 4 includes USB 3.0 support, Gigabit Ethernet, dual-band Wi‑Fi, Bluetooth 5.0, and up to 8GB of RAM.'
+    );
+
+    addSection(
+      'Conclusion',
+      'The Raspberry Pi 4 remains one of the most versatile single-board computers currently available.'
+    );
+
+    updateReport();
+  </script>
+</body>
+</html>
