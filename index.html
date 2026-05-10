@@ -1,0 +1,302 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Lam Richter Report Generator</title>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;}
+body{font-family:'Segoe UI',system-ui,sans-serif;background:#eef0f5;color:#2c2c2c;height:100vh;overflow:hidden;display:flex;flex-direction:column;}
+.topbar{background:linear-gradient(90deg,#0b4ea2,#1565c0);color:#fff;padding:13px 24px;display:flex;align-items:center;gap:14px;box-shadow:0 2px 10px rgba(0,0,0,.22);flex-shrink:0;z-index:10;}
+.topbar-logo{width:36px;height:36px;background:#fff;border-radius:7px;display:flex;align-items:center;justify-content:center;font-style:italic;font-weight:900;color:#0b4ea2;font-size:15px;letter-spacing:-1px;font-family:Georgia,serif;flex-shrink:0;box-shadow:0 1px 4px rgba(0,0,0,.2);}
+.topbar h1{font-size:17px;font-weight:700;letter-spacing:.3px;}
+.topbar-actions{margin-left:auto;display:flex;gap:10px;}
+.btn-export-top{background:rgba(255,255,255,.18);color:#fff;padding:8px 16px;border-radius:7px;border:1.5px solid rgba(255,255,255,.45);font-size:13px;font-weight:700;cursor:pointer;display:inline-flex;align-items:center;gap:6px;font-family:inherit;transition:all .18s;}
+.btn-export-top:hover{background:rgba(255,255,255,.28);transform:translateY(-1px);}
+.main{display:flex;flex:1;overflow:hidden;}
+.editor-panel{width:360px;flex-shrink:0;background:#fff;border-right:1px solid #dde0e8;overflow-y:auto;padding:18px 16px 28px;display:flex;flex-direction:column;gap:14px;}
+.editor-panel::-webkit-scrollbar{width:5px;}
+.editor-panel::-webkit-scrollbar-track{background:#f0f2f5;}
+.editor-panel::-webkit-scrollbar-thumb{background:#c5cad6;border-radius:10px;}
+.editor-section{background:#f7f9fc;border-radius:10px;padding:14px 14px 16px;border:1px solid #e4e8f0;}
+.editor-section-title{font-size:10.5px;font-weight:700;text-transform:uppercase;letter-spacing:.9px;color:#0b4ea2;margin-bottom:12px;display:flex;align-items:center;gap:7px;}
+.editor-section-title::before{content:'';display:block;width:3px;height:13px;background:#0b4ea2;border-radius:2px;}
+.field-group{display:flex;flex-direction:column;gap:5px;margin-bottom:9px;}
+.field-group:last-child{margin-bottom:0;}
+.field-label{font-size:11.5px;font-weight:600;color:#5a6072;}
+.field-input,.field-textarea{width:100%;padding:7px 10px;border:1.5px solid #d2d7e3;border-radius:6px;font-size:13px;font-family:inherit;background:#fff;color:#1a1a2e;transition:border-color .18s,box-shadow .18s;outline:none;}
+.field-input:focus,.field-textarea:focus{border-color:#0b4ea2;box-shadow:0 0 0 3px rgba(11,78,162,.1);}
+.field-textarea{min-height:78px;resize:vertical;line-height:1.5;}
+.dyn-card{background:#fff;border:1.5px solid #dde2ed;border-radius:8px;padding:11px;margin-bottom:10px;position:relative;}
+.dyn-card:last-of-type{margin-bottom:0;}
+.dyn-card-num{font-size:10px;font-weight:700;color:#8a93a6;text-transform:uppercase;letter-spacing:.7px;margin-bottom:8px;}
+.remove-btn{position:absolute;top:9px;right:9px;background:none;border:none;cursor:pointer;color:#bcc2cf;font-size:15px;line-height:1;padding:2px 5px;border-radius:4px;transition:color .18s,background .18s;}
+.remove-btn:hover{color:#e53935;background:#ffeaea;}
+.btn-add{background:#e8edf8;color:#0b4ea2;width:100%;justify-content:center;border:1.5px dashed #b0c0dc;padding:8px 16px;border-radius:7px;font-size:13px;font-weight:600;cursor:pointer;display:flex;align-items:center;gap:6px;font-family:inherit;transition:all .18s;margin-top:10px;}
+.btn-add:hover{background:#dce6f5;border-color:#0b4ea2;transform:translateY(-1px);}
+.btn-export-panel{background:linear-gradient(135deg,#0b4ea2 0%,#1a6dd0 100%);color:#fff;padding:10px 20px;font-size:13px;font-weight:700;border-radius:8px;box-shadow:0 4px 14px rgba(11,78,162,.32);justify-content:center;width:100%;border:none;cursor:pointer;display:flex;align-items:center;gap:6px;font-family:inherit;transition:all .18s;}
+.btn-export-panel:hover{background:linear-gradient(135deg,#094090,#1456ab);box-shadow:0 6px 18px rgba(11,78,162,.42);transform:translateY(-1px);}
+.export-wrap{margin-top:auto;padding-top:14px;border-top:1px solid #e4e8f0;}
+.preview-panel{flex:1;background:#e4e8f0;overflow-y:auto;padding:28px 22px 40px;display:flex;justify-content:center;}
+.preview-panel::-webkit-scrollbar{width:6px;}
+.preview-panel::-webkit-scrollbar-track{background:#dde0e8;}
+.preview-panel::-webkit-scrollbar-thumb{background:#b0b8c8;border-radius:10px;}
+.preview-wrapper{width:100%;max-width:740px;}
+.preview-label{font-size:10.5px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:#8a93a8;text-align:center;margin-bottom:10px;}
+.report-document{background:#fff;padding:40px 46px 50px;border-radius:3px;box-shadow:0 4px 28px rgba(0,0,0,.13),0 1px 5px rgba(0,0,0,.07);font-family:Calibri,'Calibri',Arial,sans-serif;min-height:1056px;}
+.report-header{display:flex;justify-content:space-between;align-items:center;padding-bottom:14px;border-bottom:2.5px solid #0b4ea2;margin-bottom:26px;}
+.report-logo-wrap{display:flex;align-items:center;gap:13px;}
+.report-logo-box{width:44px;height:44px;background:#0b4ea2;border-radius:5px;display:flex;align-items:center;justify-content:center;color:#fff;font-style:italic;font-weight:900;font-size:18px;letter-spacing:-1.5px;font-family:Georgia,serif;flex-shrink:0;}
+.report-logo-text{font-family:Calibri,sans-serif;font-size:12.5px;color:#6a7080;font-weight:600;line-height:1.35;}
+.report-logo-text strong{display:block;color:#0b4ea2;font-size:14.5px;font-weight:700;}
+.report-page-id{font-family:Calibri,sans-serif;font-size:11pt;color:#6a7080;font-weight:500;white-space:nowrap;}
+.report-title{font-size:19pt;color:#0b4ea2;font-weight:700;font-family:Calibri,sans-serif;margin-bottom:20px;line-height:1.22;}
+.report-meta{background:#f4f7fc;border-left:4px solid #0b4ea2;padding:13px 18px;border-radius:0 6px 6px 0;margin-bottom:30px;}
+.report-meta table{border-collapse:collapse;width:100%;}
+.report-meta td{font-family:Calibri,sans-serif;font-size:11pt;padding:2.5px 0;vertical-align:top;color:#2c2c2c;line-height:1.45;}
+.report-meta td.lbl{font-weight:700;color:#0b4ea2;width:145px;white-space:nowrap;padding-right:10px;}
+.report-section{margin-bottom:26px;}
+.report-section-title{font-size:14pt;font-weight:700;color:#1a1a2e;font-family:Calibri,sans-serif;margin-bottom:9px;padding-bottom:5px;border-bottom:1px solid #d0d5de;}
+.report-section-body{font-size:11pt;font-family:Calibri,sans-serif;color:#2c2c2c;line-height:1.68;white-space:pre-wrap;word-break:break-word;}
+.report-signature{margin-top:44px;padding-top:22px;border-top:1px solid #d0d5de;}
+.sig-name{font-family:Calibri,sans-serif;font-size:12pt;font-weight:700;color:#1a1a2e;display:block;line-height:1.8;}
+.sig-role{font-family:Calibri,sans-serif;font-size:11pt;font-style:italic;color:#5a6072;display:block;line-height:1.7;}
+.sig-email{font-family:Calibri,sans-serif;font-size:11pt;font-weight:700;color:#0b4ea2;display:block;line-height:1.7;}
+@media print{
+  *{-webkit-print-color-adjust:exact!important;print-color-adjust:exact!important;}
+  html,body{height:auto;overflow:visible;background:#fff!important;display:block;}
+  .topbar,.editor-panel,.preview-label{display:none!important;}
+  body{display:block;}
+  .main{display:block;overflow:visible;}
+  .preview-panel{background:#fff!important;padding:0!important;overflow:visible;display:block;}
+  .preview-wrapper{max-width:100%;}
+  .report-document{box-shadow:none!important;border-radius:0!important;padding:0!important;margin:0!important;min-height:auto!important;}
+  .report-header{position:fixed;top:0;left:0;right:0;padding:10pt 0 8pt;background:#fff;border-bottom:2pt solid #0b4ea2;z-index:9999;margin-bottom:0;}
+  .report-document{padding-top:64pt!important;}
+  .report-section{page-break-inside:avoid;}
+  .report-signature{page-break-inside:avoid;}
+  @page{size:A4;margin:2.8cm 2cm 2cm 2cm;}
+  @page{@top-right{content:"Kabir " counter(page);font-family:Calibri,sans-serif;font-size:10pt;color:#6a7080;}}
+}
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <div class="topbar-logo">LR</div>
+  <h1>Lam Richter Report Generator</h1>
+  <div class="topbar-actions">
+    <button class="btn-export-top" onclick="exportPDF()">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7,10 12,15 17,10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+      Export PDF
+    </button>
+  </div>
+</div>
+
+<div class="main">
+
+  <div class="editor-panel" id="editorPanel">
+    <div class="editor-section">
+      <div class="editor-section-title">Report Info</div>
+      <div class="field-group">
+        <label class="field-label">Report Title</label>
+        <input type="text" class="field-input" id="reportTitle" value="Professional Report" oninput="updatePreview()" placeholder="Enter report title...">
+      </div>
+    </div>
+    <div class="editor-section">
+      <div class="editor-section-title">Author Details</div>
+      <div class="field-group">
+        <label class="field-label">Prepared By</label>
+        <input type="text" class="field-input" id="preparedBy" value="John Smith" oninput="updatePreview()" placeholder="Full name...">
+      </div>
+      <div class="field-group">
+        <label class="field-label">Role / Position</label>
+        <input type="text" class="field-input" id="rolePosition" value="Senior Analyst" oninput="updatePreview()" placeholder="Job title...">
+      </div>
+      <div class="field-group">
+        <label class="field-label">Company</label>
+        <input type="text" class="field-input" id="company" value="Lam Richter Group" oninput="updatePreview()" placeholder="Company name...">
+      </div>
+      <div class="field-group">
+        <label class="field-label">Email</label>
+        <input type="email" class="field-input" id="email" value="j.smith@lamrichter.com" oninput="updatePreview()" placeholder="email@company.com">
+      </div>
+    </div>
+    <div class="editor-section">
+      <div class="editor-section-title">Report Sections</div>
+      <div id="sectionsContainer"></div>
+      <button class="btn-add" onclick="addSection()">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+        Add Section
+      </button>
+    </div>
+    <div class="export-wrap">
+      <button class="btn-export-panel" onclick="exportPDF()">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><polyline points="7,10 12,15 17,10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+        Export as PDF
+      </button>
+    </div>
+  </div>
+
+  <div class="preview-panel">
+    <div class="preview-wrapper">
+      <div class="preview-label">&#9679; Live Preview</div>
+      <div class="report-document" id="reportDocument">
+        <div class="report-header" id="reportHeader">
+          <div class="report-logo-wrap">
+            <div class="report-logo-box">LR</div>
+            <div class="report-logo-text">
+              <strong>Lam Richter</strong>
+              Professional Reports
+            </div>
+          </div>
+          <div class="report-page-id" id="reportPageId">Kabir 1</div>
+        </div>
+        <div class="report-title" id="previewTitle">Professional Report</div>
+        <div class="report-meta">
+          <table>
+            <tr><td class="lbl">Prepared By:</td><td id="pvPreparedBy">John Smith</td></tr>
+            <tr><td class="lbl">Role / Position:</td><td id="pvRole">Senior Analyst</td></tr>
+            <tr><td class="lbl">Company:</td><td id="pvCompany">Lam Richter Group</td></tr>
+            <tr><td class="lbl">Date:</td><td id="pvDate"></td></tr>
+          </table>
+        </div>
+        <div id="previewSections"></div>
+        <div class="report-signature">
+          <span class="sig-name" id="sigName">John Smith</span>
+          <span class="sig-role" id="sigRole">Senior Analyst, Lam Richter Group</span>
+          <span class="sig-email" id="sigEmail">j.smith@lamrichter.com</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<script>
+(function(){
+  var sections=[];
+  var nextId=1;
+
+  function val(id){var el=document.getElementById(id);return el?el.value:'';}
+
+  function getCurrentDate(){
+    var d=new Date();
+    var mo=['January','February','March','April','May','June','July','August','September','October','November','December'];
+    return mo[d.getMonth()]+' '+d.getDate()+', '+d.getFullYear();
+  }
+
+  function addSection(title,body){
+    title=title||'';body=body||'';
+    var id=nextId++;
+    sections.push({id:id,title:title,body:body});
+    var container=document.getElementById('sectionsContainer');
+
+    var card=document.createElement('div');
+    card.className='dyn-card';card.id='sec-card-'+id;
+
+    var num=document.createElement('div');
+    num.className='dyn-card-num';num.textContent='Section '+sections.length;
+    card.appendChild(num);
+
+    var rb=document.createElement('button');
+    rb.className='remove-btn';rb.title='Remove';rb.innerHTML='&#x2715;';
+    (function(sid){rb.addEventListener('click',function(){removeSection(sid);});})(id);
+    card.appendChild(rb);
+
+    var tg=document.createElement('div');tg.className='field-group';tg.style.paddingRight='28px';
+    var tl=document.createElement('label');tl.className='field-label';tl.textContent='Section Title';
+    var ti=document.createElement('input');ti.type='text';ti.className='field-input';ti.id='sec-t-'+id;
+    ti.value=title;ti.placeholder='Section heading...';
+    (function(sid){ti.addEventListener('input',function(){syncSection(sid);});})(id);
+    tg.appendChild(tl);tg.appendChild(ti);card.appendChild(tg);
+
+    var bg=document.createElement('div');bg.className='field-group';
+    var bl=document.createElement('label');bl.className='field-label';bl.textContent='Section Body';
+    var bi=document.createElement('textarea');bi.className='field-textarea';bi.id='sec-b-'+id;
+    bi.value=body;bi.placeholder='Write section content here...';
+    (function(sid){bi.addEventListener('input',function(){syncSection(sid);});})(id);
+    bg.appendChild(bl);bg.appendChild(bi);card.appendChild(bg);
+
+    container.appendChild(card);
+    renumberCards();updatePreview();
+  }
+
+  function removeSection(id){
+    var idx=-1;
+    for(var i=0;i<sections.length;i++){if(sections[i].id===id){idx=i;break;}}
+    if(idx!==-1)sections.splice(idx,1);
+    var card=document.getElementById('sec-card-'+id);
+    if(card&&card.parentNode)card.parentNode.removeChild(card);
+    renumberCards();updatePreview();
+  }
+
+  function syncSection(id){
+    var s=null;
+    for(var i=0;i<sections.length;i++){if(sections[i].id===id){s=sections[i];break;}}
+    if(!s)return;
+    var ti=document.getElementById('sec-t-'+id);
+    var bi=document.getElementById('sec-b-'+id);
+    if(ti)s.title=ti.value;if(bi)s.body=bi.value;
+    updatePreview();
+  }
+
+  function renumberCards(){
+    var cards=document.querySelectorAll('.dyn-card');
+    for(var i=0;i<cards.length;i++){
+      var n=cards[i].querySelector('.dyn-card-num');
+      if(n)n.textContent='Section '+(i+1);
+    }
+  }
+
+  function updatePreview(){
+    var title=val('reportTitle');
+    var preparedBy=val('preparedBy');
+    var role=val('rolePosition');
+    var company=val('company');
+    var email=val('email');
+
+    document.getElementById('previewTitle').textContent=title||'Report Title';
+    document.getElementById('pvPreparedBy').textContent=preparedBy||'--';
+    document.getElementById('pvRole').textContent=role||'--';
+    document.getElementById('pvCompany').textContent=company||'--';
+    document.getElementById('sigName').textContent=preparedBy||'--';
+    var rc=[role,company].filter(Boolean).join(', ');
+    document.getElementById('sigRole').textContent=rc||'--';
+    document.getElementById('sigEmail').textContent=email||'--';
+
+    var pvSec=document.getElementById('previewSections');
+    pvSec.innerHTML='';
+    for(var i=0;i<sections.length;i++){
+      var s=sections[i];
+      var sec=document.createElement('div');sec.className='report-section';
+      var h=document.createElement('div');h.className='report-section-title';h.textContent=s.title||'Untitled Section';
+      var b=document.createElement('div');b.className='report-section-body';b.textContent=s.body||'';
+      sec.appendChild(h);sec.appendChild(b);pvSec.appendChild(sec);
+    }
+  }
+
+  window.addSection=addSection;
+  window.updatePreview=updatePreview;
+
+  window.exportPDF=function(){
+    var title=val('reportTitle')||'Report';
+    var slug=title.trim().replace(/[^\w\s-]/g,'').replace(/\s+/g,'_')||'Report';
+    var prev=document.title;
+    document.title=slug;
+    window.print();
+    setTimeout(function(){document.title=prev;},2500);
+  };
+
+  document.getElementById('pvDate').textContent=getCurrentDate();
+
+  addSection('Executive Summary','This report provides a comprehensive overview of the key findings, conclusions, and strategic recommendations developed through rigorous analysis. The purpose of this document is to present actionable insights in a structured and professional format suitable for stakeholder review.');
+  addSection('Background & Context','This section outlines the background information and contextual factors necessary to fully understand the scope and objectives of this analysis. It encompasses the historical context, relevant industry dynamics, regulatory considerations, and the specific circumstances that gave rise to this investigation.');
+  addSection('Analysis & Findings','The analysis conducted reveals several significant findings that warrant attention. Each finding presented herein is substantiated by verifiable data, qualitative assessment, and evidence gathered through systematic research. The implications are discussed in relation to current operational conditions and future projections.');
+  addSection('Recommendations','Based on the detailed analysis conducted, the following recommendations are put forward for consideration by key decision-makers. These recommendations are designed to address identified challenges, capitalise on emerging opportunities, and drive sustainable performance improvements.');
+
+  updatePreview();
+})();
+</script>
+</body>
+</html>
